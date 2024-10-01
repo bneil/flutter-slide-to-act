@@ -75,6 +75,9 @@ class SlideAction extends StatefulWidget {
   /// The point where the onSubmit callback should be executed
   final double trigger;
 
+  /// Callback called during sliding
+  final Future<void> Function(double progress)? onSlide;
+
   /// Create a new instance of the widget
   const SlideAction({
     Key? key,
@@ -99,14 +102,17 @@ class SlideAction extends StatefulWidget {
     this.textStyle,
     this.sliderButtonIcon,
     this.trigger = 0.8,
-  })  : assert(0.1 <= trigger && trigger <= 1.0, 'The value of `trigger` should be between 0.1 and 1.0'),
+    this.onSlide,
+  })  : assert(0.1 <= trigger && trigger <= 1.0,
+            'The value of `trigger` should be between 0.1 and 1.0'),
         super(key: key);
   @override
   SlideActionState createState() => SlideActionState();
 }
 
 /// Use a GlobalKey to access the state. This is the only way to call [SlideActionState.reset]
-class SlideActionState extends State<SlideAction> with TickerProviderStateMixin {
+class SlideActionState extends State<SlideAction>
+    with TickerProviderStateMixin {
   final GlobalKey _containerKey = GlobalKey();
   final GlobalKey _sliderKey = GlobalKey();
   double _dx = 0;
@@ -117,7 +123,10 @@ class SlideActionState extends State<SlideAction> with TickerProviderStateMixin 
   double? _initialContainerWidth, _containerWidth;
   double _checkAnimationDx = 0;
   bool submitted = false;
-  late AnimationController _checkAnimationController, _shrinkAnimationController, _resizeAnimationController, _cancelAnimationController;
+  late AnimationController _checkAnimationController,
+      _shrinkAnimationController,
+      _resizeAnimationController,
+      _cancelAnimationController;
 
   @override
   Widget build(BuildContext context) {
@@ -130,7 +139,9 @@ class SlideActionState extends State<SlideAction> with TickerProviderStateMixin 
           key: _containerKey,
           height: widget.height,
           width: _containerWidth,
-          constraints: _containerWidth != null ? null : BoxConstraints.expand(height: widget.height),
+          constraints: _containerWidth != null
+              ? null
+              : BoxConstraints.expand(height: widget.height),
           child: Material(
             elevation: widget.elevation,
             color: widget.outerColor ?? Theme.of(context).colorScheme.secondary,
@@ -146,15 +157,18 @@ class SlideActionState extends State<SlideAction> with TickerProviderStateMixin 
                           widget.submittedIcon ??
                               Icon(
                                 Icons.done,
-                                color: widget.innerColor ?? Theme.of(context).primaryIconTheme.color,
+                                color: widget.innerColor ??
+                                    Theme.of(context).primaryIconTheme.color,
                               ),
                           Positioned.fill(
                             right: 0,
                             child: Transform(
-                              transform: Matrix4.rotationY(_checkAnimationDx * (pi / 2)),
+                              transform: Matrix4.rotationY(
+                                  _checkAnimationDx * (pi / 2)),
                               alignment: Alignment.centerRight,
                               child: Container(
-                                color: widget.outerColor ?? Theme.of(context).colorScheme.secondary,
+                                color: widget.outerColor ??
+                                    Theme.of(context).colorScheme.secondary,
                               ),
                             ),
                           ),
@@ -170,14 +184,18 @@ class SlideActionState extends State<SlideAction> with TickerProviderStateMixin 
                         opacity: 1 - 1 * _progress,
                         child: Transform(
                           alignment: Alignment.center,
-                          transform: Matrix4.rotationY(widget.reversed ? pi : 0),
+                          transform:
+                              Matrix4.rotationY(widget.reversed ? pi : 0),
                           child: widget.child ??
                               Text(
                                 widget.text ?? 'Slide to act',
                                 textAlign: TextAlign.center,
                                 style: widget.textStyle ??
                                     TextStyle(
-                                      color: widget.textColor ?? Theme.of(context).primaryIconTheme.color,
+                                      color: widget.textColor ??
+                                          Theme.of(context)
+                                              .primaryIconTheme
+                                              .color,
                                       fontSize: 24,
                                     ),
                               ),
@@ -193,10 +211,13 @@ class SlideActionState extends State<SlideAction> with TickerProviderStateMixin 
                             child: Container(
                               key: _sliderKey,
                               child: GestureDetector(
-                                onHorizontalDragUpdate: widget.enabled ? onHorizontalDragUpdate : null,
+                                onHorizontalDragUpdate: widget.enabled
+                                    ? onHorizontalDragUpdate
+                                    : null,
                                 onHorizontalDragEnd: (details) async {
                                   _endDx = _dx;
-                                  if (_progress <= widget.trigger || widget.onSubmit == null) {
+                                  if (_progress <= widget.trigger ||
+                                      widget.onSubmit == null) {
                                     _cancelAnimation();
                                   } else {
                                     await _resizeAnimation();
@@ -211,20 +232,32 @@ class SlideActionState extends State<SlideAction> with TickerProviderStateMixin 
                                   }
                                 },
                                 child: Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 8.0),
                                   child: Material(
-                                    borderRadius: BorderRadius.circular(widget.borderRadius),
-                                    color: widget.innerColor ?? Theme.of(context).primaryIconTheme.color,
+                                    borderRadius: BorderRadius.circular(
+                                        widget.borderRadius),
+                                    color: widget.innerColor ??
+                                        Theme.of(context)
+                                            .primaryIconTheme
+                                            .color,
                                     child: Container(
-                                      padding: EdgeInsets.all(widget.sliderButtonIconPadding),
+                                      padding: EdgeInsets.all(
+                                          widget.sliderButtonIconPadding),
                                       child: Transform.rotate(
-                                        angle: widget.sliderRotate ? -pi * _progress : 0,
+                                        angle: widget.sliderRotate
+                                            ? -pi * _progress
+                                            : 0,
                                         child: Center(
                                           child: widget.sliderButtonIcon ??
                                               Icon(
                                                 Icons.arrow_forward,
-                                                size: widget.sliderButtonIconSize,
-                                                color: widget.outerColor ?? Theme.of(context).colorScheme.secondary,
+                                                size:
+                                                    widget.sliderButtonIconSize,
+                                                color: widget.outerColor ??
+                                                    Theme.of(context)
+                                                        .colorScheme
+                                                        .secondary,
                                               ),
                                         ),
                                       ),
@@ -244,10 +277,15 @@ class SlideActionState extends State<SlideAction> with TickerProviderStateMixin 
     );
   }
 
-  void onHorizontalDragUpdate(DragUpdateDetails details) {
-    setState(() {
-      _dx = (_dx + details.delta.dx).clamp(0.0, _maxDx);
-    });
+  void onHorizontalDragUpdate(DragUpdateDetails details) async {
+    final newDx = (_dx + details.delta.dx).clamp(0.0, _maxDx);
+    if (newDx != _dx) {
+      setState(() {
+        _dx = newDx;
+      });
+      // Call onSlide callback with current progress
+      await widget.onSlide?.call(_progress);
+    }
   }
 
   /// Call this method to revert the animations
@@ -374,14 +412,19 @@ class SlideActionState extends State<SlideAction> with TickerProviderStateMixin 
     );
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final RenderBox containerBox = _containerKey.currentContext!.findRenderObject() as RenderBox;
+      final RenderBox containerBox =
+          _containerKey.currentContext!.findRenderObject() as RenderBox;
       _containerWidth = containerBox.size.width;
       _initialContainerWidth = _containerWidth;
 
-      final RenderBox sliderBox = _sliderKey.currentContext!.findRenderObject() as RenderBox;
+      final RenderBox sliderBox =
+          _sliderKey.currentContext!.findRenderObject() as RenderBox;
       final sliderWidth = sliderBox.size.width;
 
-      _maxDx = _containerWidth! - (sliderWidth / 2) - 40 - widget.sliderButtonYOffset;
+      _maxDx = _containerWidth! -
+          (sliderWidth / 2) -
+          40 -
+          widget.sliderButtonYOffset;
     });
   }
 
