@@ -78,6 +78,9 @@ class SlideAction extends StatefulWidget {
   /// Callback called during sliding
   final Future<void> Function(double progress)? onSlide;
 
+  /// Callback called when the slider is released
+  final void Function(double progress)? onSliderReleased;
+
   /// Create a new instance of the widget
   const SlideAction({
     Key? key,
@@ -103,6 +106,7 @@ class SlideAction extends StatefulWidget {
     this.sliderButtonIcon,
     this.trigger = 0.8,
     this.onSlide,
+    this.onSliderReleased,
   })  : assert(0.1 <= trigger && trigger <= 1.0,
             'The value of `trigger` should be between 0.1 and 1.0'),
         super(key: key);
@@ -216,6 +220,8 @@ class SlideActionState extends State<SlideAction>
                                     : null,
                                 onHorizontalDragEnd: (details) async {
                                   _endDx = _dx;
+                                  // Call the onSliderReleased callback
+                                  widget.onSliderReleased?.call(_progress);
                                   if (_progress <= widget.trigger ||
                                       widget.onSubmit == null) {
                                     _cancelAnimation();
